@@ -1,0 +1,342 @@
+<?php
+
+/*
+ * Query SQL to get all drupal_jsvalidator blocks
+ */
+function get_all_pth($category) {
+  $query = db_select('honda_producto', 'h')
+  ->fields('h', array('pid', 'name'))
+  ->condition('category', $category)
+  ->addTag('node_access')
+  ->execute();
+  return $query;
+}
+
+/*
+ * Query SQL to check if empty table
+ */
+function is_empty_drupal_jsvalidator() {
+  $query = db_select('drupal_jsvalidator', 'h')
+  ->fields('h', array('pid'))
+  ->addTag('node_access')
+  ->execute()
+  ->fetchAll(PDO::FETCH_ASSOC);
+
+  if(empty($query)) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/*
+ * Query SQL to get all fileds of home table
+ */
+function get_pth_data() {
+  $query = db_select('drupal_jsvalidator', 'h')
+  ->fields('h')
+  ->addTag('node_access')
+  ->execute()
+  ->fetchAll(PDO::FETCH_ASSOC);
+  return $query;
+}
+
+/*
+ * Implements hook_menu().
+ */
+function drupal_jsvalidator_menu() {
+  $items['admin/structure/pth'] = array(
+    'title' => t('Administrar Para Tu Honda'),
+    'description' => t('Administrar los contenidos de Para Tu Honda'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('drupal_jsvalidator_form'),
+    'access arguments' => array('administer pth'),
+  );
+  return $items;
+}
+
+/*
+ * Implements hook_permission().
+ */
+function drupal_jsvalidator_permission(){
+    return array(
+      'administer pth' =>  array(
+        'title' => t('Administer drupal_jsvalidator'),
+        'restrict access' => TRUE,
+      ),
+  );
+}
+
+/*
+* Form builder
+*/
+function drupal_jsvalidator_form($form, &$form_state) {
+
+   $data_pth = get_pth_data();
+   $data_pth = $data_pth[0];
+
+   //get taxonomies IDs
+   $eh = taxonomy_get_term_by_name('Estilo Honda');
+   $eh = key($eh);
+
+   $cz = taxonomy_get_term_by_name('Cascos Zoan');
+   $cz = key($cz);
+
+   $zt = taxonomy_get_term_by_name('Zen Tech');
+   $zt = key($zt);
+
+   $r = taxonomy_get_term_by_name('Repuestos');
+   $r = key($r);
+
+   // queries to DB
+   $data_estilo_honda = get_all_pth($eh);
+   $data_cascos_zoan = get_all_pth($cz);
+   $data_zen_tech = get_all_pth($zt);
+   $data_repuestos = get_all_pth($r);
+
+   $options_estilo_honda = array();
+   $options_cascos_zoan = array();
+   $options_zen_tech = array();
+   $options_repuestos = array();
+
+   //explodes default values
+   $explode = explode('-', $data_pth['estilo_honda_contents']);
+   $values_estilo_honda = array();
+   // foreach trough all keys
+   foreach($data_estilo_honda as $data) {
+    $options_estilo_honda[$data->pid] = $data->name;
+    $key = array_search($data->pid, $explode);
+    if($key!==false) {
+      $values_estilo_honda[] = $explode[$key];
+    }
+   }
+
+
+   $explode = explode('-', $data_pth['cascos_zoan_contents']);
+   $values_cascos_zoan = array();
+   foreach($data_cascos_zoan as $data) {
+    $options_cascos_zoan[$data->pid] = $data->name; 
+    $key = array_search($data->pid, $explode);
+    if($key!==false) {
+      $values_cascos_zoan[] = $explode[$key];
+    }
+   }
+
+   $explode = explode('-', $data_pth['zen_tech_contents']);
+   $values_zen_tech = array();
+   foreach($data_zen_tech as $data) {
+    $options_zen_tech[$data->pid] = $data->name;
+    $key = array_search($data->pid, $explode);
+    if($key!==false) {
+      $values_zen_tech[] = $explode[$key];
+    } 
+   }
+
+   $explode = explode('-', $data_pth['repuestos_contents']);
+   $values_repuestos = array();
+   foreach($data_repuestos as $data) {
+    $options_repuestos[$data->pid] = $data->name; 
+    $key = array_search($data->pid, $explode);
+    if($key!==false) {
+      $values_repuestos[] = $explode[$key];
+    } 
+   }
+
+
+   //krumo($data);
+
+   $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Titulo'),
+    //'#required' => TRUE,
+    '#default_value' => $data_pth['title'],
+   );
+
+   $form['img'] = array(
+    '#type' => 'managed_file',
+    '#title' => t('Imagen'),
+    '#description' => t('Extensiones permitidas: gif png jpg jpeg'),
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('gif png jpg jpeg'),
+      // Pass the maximum file size in bytes
+      'file_validate_size' => array(1 * 1024 * 1024),
+    ),
+    '#upload_location' => 'public://pth/',
+    '#default_value' => $data_pth['img'],
+   );
+
+   $form['estilo_honda_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Titulo Estilo Honda'),
+    '#default_value' => $data_pth['estilo_honda_title'],
+    '#required' => TRUE,
+   );
+   $form['estilo_honda_contents'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Estilo Honda'),
+    '#default_value' => 1,
+    '#options' => $options_estilo_honda,
+   );
+
+   $form['cascos_zoan_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Titulo Cascos Zoan'),
+    '#default_value' => $data_pth['cascos_zoan_title'],
+    '#required' => TRUE,
+   );
+   $form['cascos_zoan_contents'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Cascos Zoan'),
+    '#options' => $options_cascos_zoan,
+   );
+
+   $form['zen_tech_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Titulo Zen Tech'),
+    '#default_value' => $data_pth['zen_tech_title'],
+    '#required' => TRUE,
+   );
+   $form['zen_tech_contents'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Zen Tech'),
+    '#options' => $options_zen_tech,
+   );
+
+   $form['repuestos_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Título Repuestos'),
+    '#default_value' => $data_pth['repuestos_title'],
+    '#required' => TRUE,
+   );
+   $form['repuestos_contents'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Repuestos'),
+    '#options' => $options_repuestos,
+   );
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Guardar Datos'),
+    );
+
+    drupal_add_js(array('drupal_jsvalidator' => array('values_estilo_honda' => $values_estilo_honda)), array('type' => 'setting'));
+    drupal_add_js(array('drupal_jsvalidator' => array('values_cascos_zoan' => $values_cascos_zoan)), array('type' => 'setting'));
+    drupal_add_js(array('drupal_jsvalidator' => array('values_zen_tech' => $values_zen_tech)), array('type' => 'setting'));
+    drupal_add_js(array('drupal_jsvalidator' => array('values_repuestos' => $values_repuestos)), array('type' => 'setting'));
+    drupal_add_js(drupal_get_path('module', 'drupal_jsvalidator') . '/drupal_jsvalidator_validator.js');
+
+    return $form;
+}
+
+function drupal_jsvalidator_form_validate($form, &$form_state) {
+  // change to permanent status
+  global $user;
+  $account = $user;
+
+  // logo
+  $file = file_load($form_state['values']['img']);
+  $file->status = FILE_STATUS_PERMANENT;
+  file_save($file);
+  file_usage_add($file, 'user', 'user', $account->uid);
+
+  // estilo honda
+  $ehc = $form_state['values']['estilo_honda_contents'];
+  $checks = '';
+  foreach($ehc as $e) {
+    if($e != 0) {
+      $checks = $checks . $e . '-';
+    }
+  }
+  $form_state['values']['estilo_honda_contents'] = $checks;
+
+  // cascos zoan
+  $czc = $form_state['values']['cascos_zoan_contents'];
+  $checks = '';
+  foreach($czc as $e) {
+    if($e != 0) {
+      $checks = $checks . $e . '-';
+    }
+  }
+  $form_state['values']['cascos_zoan_contents'] = $checks;
+
+  // zen tech
+  $zt = $form_state['values']['zen_tech_contents'];
+  $checks = '';
+  foreach($zt as $e) {
+    if($e != 0) {
+      $checks = $checks . $e . '-';
+    }
+  }
+  $form_state['values']['zen_tech_contents'] = $checks;
+
+  // repuestos
+  $r = $form_state['values']['repuestos_contents'];
+  $checks = '';
+  foreach($r as $e) {
+    if($e != 0) {
+      $checks = $checks . $e . '-';
+    }
+  }
+  $form_state['values']['repuestos_contents'] = $checks;
+
+
+}
+
+
+/*
+* Submit handler
+*/
+function drupal_jsvalidator_form_submit($form, &$form_state) {
+
+  // set variables
+  $title = $form_state['values']['title'];
+  $img = $form_state['values']['img'];
+  $estilo_honda_title = $form_state['values']['estilo_honda_title'];
+  $estilo_honda_contents = $form_state['values']['estilo_honda_contents'];
+  $cascos_zoan_title = $form_state['values']['cascos_zoan_title'];
+  $cascos_zoan_contents = $form_state['values']['cascos_zoan_contents'];
+  $zen_tech_title = $form_state['values']['zen_tech_title'];
+  $zen_tech_contents = $form_state['values']['zen_tech_contents'];
+  $repuestos_title = $form_state['values']['repuestos_title'];
+  $repuestos_contents = $form_state['values']['repuestos_contents'];
+
+  $empty = is_empty_drupal_jsvalidator();
+
+  if($empty) {
+    $query = db_insert('drupal_jsvalidator')
+    ->fields(array(
+      'title' => $title,
+      'img' => $img,
+      'estilo_honda_title' => $estilo_honda_title,
+      'estilo_honda_contents' => $estilo_honda_contents,
+      'cascos_zoan_title' => $cascos_zoan_title,
+      'cascos_zoan_contents' => $cascos_zoan_contents,
+      'zen_tech_title' => $zen_tech_title,
+      'zen_tech_contents' => $zen_tech_contents,
+      'repuestos_title' => $repuestos_title,
+      'repuestos_contents' => $repuestos_contents,
+
+    ))
+    ->execute();
+  }
+  else {
+    $query = db_update('drupal_jsvalidator')
+    ->fields(array(
+      'title' => $title,
+      'img' => $img,
+      'estilo_honda_title' => $estilo_honda_title,
+      'estilo_honda_contents' => $estilo_honda_contents,
+      'cascos_zoan_title' => $cascos_zoan_title,
+      'cascos_zoan_contents' => $cascos_zoan_contents,
+      'zen_tech_title' => $zen_tech_title,
+      'zen_tech_contents' => $zen_tech_contents,
+      'repuestos_title' => $repuestos_title,
+      'repuestos_contents' => $repuestos_contents,
+    ))
+    ->condition('pid', 1)
+    ->execute();
+  }
+
+  drupal_set_message('Pagina Para Tu Honda actualizada');
+
+}

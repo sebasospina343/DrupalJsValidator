@@ -1,0 +1,73 @@
+<?php
+/*
+ * Creates the tables through schema API
+ */
+function drupal_jsvalidator_schema() {
+  $schema['drupal_jsvalidator'] = array (
+    'description' => 'The main store for pth',
+    'fields' => array(
+      'pid' => array(
+        'description' => 'Primary key',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'Header Title',
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE
+      ),
+      'img' => array(
+        'description' => 'Header Img',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'estilo_honda_contents' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'cascos_zoan_contents' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'zen_tech_contents' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'repuestos_contents' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'estilo_honda_title' => array(
+        'type' => 'varchar',
+        'length' => '140',
+        'not null' => TRUE
+      ),
+      'cascos_zoan_title' => array(
+        'type' => 'varchar',
+        'length' => '140',
+        'not null' => TRUE
+      ),
+      'zen_tech_title' => array(
+        'type' => 'varchar',
+        'length' => '140',
+        'not null' => TRUE
+      ),
+      'repuestos_title' => array(
+        'type' => 'varchar',
+        'length' => '140',
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('pid'),
+  );
+  
+  return $schema;
+}

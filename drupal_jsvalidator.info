@@ -1,0 +1,7 @@
+name = DrupalJsValidator Módulo
+description = Módulo para gestionar el landing de la sección.
+core = 7.x
+package = Custom Modules
+
+files[] = drupal_jsvalidator.module
+files[] = drupal_jsvalidator.install
